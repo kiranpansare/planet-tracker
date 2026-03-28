@@ -4,6 +4,7 @@ import { calculatePlanetaryPositions } from './utils/astronomy';
 import { downloadExcel } from './utils/export';
 import { Country, State, City } from 'country-state-city';
 import Commodities from './Commodities';
+import Forecast from './Forecast';
 import './App.css';
 
 function App() {
@@ -176,7 +177,7 @@ function App() {
       <header className="header animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1>Omni Tracker Suite</h1>
-          <p>{activeTab === 'astrology' ? 'Vedic Sidereal calculations for Zodiac Sign, Degree, and Nakshatra.' : 'Live global commodity prices using Alpha Vantage API.'}</p>
+          <p>{activeTab === 'astrology' ? 'Vedic Sidereal calculations for Zodiac Sign, Degree, and Nakshatra.' : activeTab === 'commodities' ? 'Live global commodity prices using Alpha Vantage API.' : 'AI Machine Learning predictions based on planetary cycles.'}</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button 
@@ -190,6 +191,12 @@ function App() {
             onClick={() => setActiveTab('commodities')}
           >
             Commodities
+          </button>
+          <button 
+            className={`btn ${activeTab === 'forecast' ? 'btn-primary' : 'btn-secondary'}`} 
+            onClick={() => setActiveTab('forecast')}
+          >
+            AI Forecast
           </button>
           <button className="btn btn-secondary" onClick={() => setIsLoggedIn(false)} style={{ borderColor: 'var(--danger-color)', color: 'var(--danger-color)' }}>
             Logout
@@ -339,8 +346,10 @@ function App() {
             </div>
           )}
         </>
-      ) : (
+      ) : activeTab === 'commodities' ? (
         <Commodities />
+      ) : (
+        <Forecast />
       )}
     </div>
   );
