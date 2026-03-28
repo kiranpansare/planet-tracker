@@ -3,6 +3,7 @@ import { Download, Calculator, Globe, CalendarRange, MapPin, Lock, User } from '
 import { calculatePlanetaryPositions } from './utils/astronomy';
 import { downloadExcel } from './utils/export';
 import { Country, State, City } from 'country-state-city';
+import Commodities from './Commodities';
 import './App.css';
 
 function App() {
@@ -11,6 +12,9 @@ function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+
+  // Routing State
+  const [activeTab, setActiveTab] = useState('astrology');
 
   // Dashboard State
   const now = new Date();
@@ -128,8 +132,8 @@ function App() {
       <div className="app-container" style={{ justifyContent: 'center', alignItems: 'center', minHeight: '100vh', display: 'flex' }}>
         <div className="glass-panel animate-fade-in" style={{ padding: '2.5rem', maxWidth: '400px', width: '100%', textAlign: 'center' }}>
           <Globe size={48} style={{ color: 'var(--accent-color)', marginBottom: '1rem' }} />
-          <h2 style={{ marginBottom: '0.5rem' }}>Astrological Tracker</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Sign in to calculate planetary positions.</p>
+          <h2 style={{ marginBottom: '0.5rem' }}>Omni Tracker Portal</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Sign in to access Astrological and Commodity data.</p>
           
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="input-group" style={{ textAlign: 'left' }}>
@@ -169,155 +173,174 @@ function App() {
 
   return (
     <div className="app-container">
-      <header className="header animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left' }}>
+      <header className="header animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1>Astrological Planetary Tracker</h1>
-          <p>Vedic Sidereal calculations for Zodiac Sign, Degree, and Nakshatra.</p>
+          <h1>Omni Tracker Suite</h1>
+          <p>{activeTab === 'astrology' ? 'Vedic Sidereal calculations for Zodiac Sign, Degree, and Nakshatra.' : 'Live global commodity prices using Alpha Vantage API.'}</p>
         </div>
-        <button className="btn btn-secondary" onClick={() => setIsLoggedIn(false)}>
-          Logout
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            className={`btn ${activeTab === 'astrology' ? 'btn-primary' : 'btn-secondary'}`} 
+            onClick={() => setActiveTab('astrology')}
+          >
+            Astrology
+          </button>
+          <button 
+            className={`btn ${activeTab === 'commodities' ? 'btn-primary' : 'btn-secondary'}`} 
+            onClick={() => setActiveTab('commodities')}
+          >
+            Commodities
+          </button>
+          <button className="btn btn-secondary" onClick={() => setIsLoggedIn(false)} style={{ borderColor: 'var(--danger-color)', color: 'var(--danger-color)' }}>
+            Logout
+          </button>
+        </div>
       </header>
 
-      <div className="glass-panel animate-fade-in" style={{ animationDelay: '0.1s' }}>
-        
-        {/* Time Inputs */}
-        <div className="controls-grid" style={{ paddingBottom: '0.5rem' }}>
-          <div className="input-group">
-            <label className="input-label"><CalendarRange size={14} style={{display:'inline', marginRight: '4px'}}/>Start Date & Time</label>
-            <input 
-              type="datetime-local" 
-              className="glass-input" 
-              value={startDate} 
-              onChange={(e) => setStartDate(e.target.value)} 
-            />
-          </div>
-          
-          <div className="input-group">
-            <label className="input-label"><CalendarRange size={14} style={{display:'inline', marginRight: '4px'}}/>End Date & Time</label>
-            <input 
-              type="datetime-local" 
-              className="glass-input" 
-              value={endDate} 
-              onChange={(e) => setEndDate(e.target.value)} 
-            />
-          </div>
-        </div>
-
-        {/* Location Dropdowns */}
-        <div className="controls-grid" style={{ paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
-          <div className="input-group">
-            <label className="input-label"><MapPin size={14} style={{display:'inline', marginRight: '4px'}}/>Country</label>
-            <select className="glass-input" value={selectedCountry} onChange={handleCountryChange}>
-              <option value="">Select Country</option>
-              {countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
-            </select>
-          </div>
-
-          <div className="input-group">
-            <label className="input-label"><MapPin size={14} style={{display:'inline', marginRight: '4px'}}/>State / Province</label>
-            <select className="glass-input" value={selectedState} onChange={handleStateChange} disabled={!selectedCountry || states.length === 0}>
-              <option value="">Select State</option>
-              {states.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
-            </select>
-          </div>
-
-          <div className="input-group">
-            <label className="input-label"><MapPin size={14} style={{display:'inline', marginRight: '4px'}}/>City / Region</label>
-            <select className="glass-input" value={selectedCity} onChange={handleCityChange} disabled={!selectedState || cities.length === 0}>
-              <option value="">Select City</option>
-              {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {/* Manual Coordinates Override */}
-        <div className="controls-grid" style={{ paddingTop: '0.5rem' }}>
-          <div className="input-group">
-            <label className="input-label"><Globe size={14} style={{display:'inline', marginRight: '4px'}}/>Latitude Override</label>
-            <input 
-              type="number" 
-              step="any"
-              placeholder="e.g. 40.7128"
-              className="glass-input" 
-              value={latitude} 
-              onChange={(e) => setLatitude(e.target.value)} 
-            />
-          </div>
-
-          <div className="input-group">
-            <label className="input-label"><Globe size={14} style={{display:'inline', marginRight: '4px'}}/>Longitude Override</label>
-            <input 
-              type="number" 
-              step="any"
-              placeholder="e.g. -74.0060"
-              className="glass-input" 
-              value={longitude} 
-              onChange={(e) => setLongitude(e.target.value)} 
-            />
-          </div>
-        </div>
-
-        <div className="action-bar">
-          <button className="btn btn-secondary" onClick={setLocationByBrowser}>
-            Use Current Location
-          </button>
-          <button className="btn btn-primary" onClick={handleCalculate} disabled={isCalculating}>
-            <Calculator size={18} />
-            {isCalculating ? 'Calculating...' : 'Calculate Positions'}
-          </button>
-        </div>
-      </div>
-
-      {results.length > 0 ? (
-        <div className="glass-panel results-panel animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <div className="results-header">
-            <h2>Calculated Data ({results.length} rows)</h2>
-            <button className="btn btn-primary" onClick={handleExport}>
-              <Download size={18} />
-              Export to Excel
-            </button>
-          </div>
-          
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Date & Time</th>
-                  <th>Planets</th>
-                  <th>Sign</th>
-                  <th>Degree</th>
-                  <th>Naks</th>
-                  <th>Lat</th>
-                  <th>Lon</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.slice(0, 100).map((row, i) => (
-                  <tr key={i}>
-                    <td style={{whiteSpace: 'nowrap'}}>{row.Date}</td>
-                    <td style={{fontWeight: 600}}>{row.Planets}</td>
-                    <td>{row.Sign}</td>
-                    <td>{row.Degree}</td>
-                    <td>{row.Naks}</td>
-                    <td>{row.Latitude}</td>
-                    <td>{row.Longitude}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {results.length > 100 && (
-              <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                Showing first 100 rows. Export to Excel to see all data.
+      {activeTab === 'astrology' ? (
+        <>
+          <div className="glass-panel animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            {/* Time Inputs */}
+            <div className="controls-grid" style={{ paddingBottom: '0.5rem' }}>
+              <div className="input-group">
+                <label className="input-label"><CalendarRange size={14} style={{display:'inline', marginRight: '4px'}}/>Start Date & Time</label>
+                <input 
+                  type="datetime-local" 
+                  className="glass-input" 
+                  value={startDate} 
+                  onChange={(e) => setStartDate(e.target.value)} 
+                />
               </div>
-            )}
+              
+              <div className="input-group">
+                <label className="input-label"><CalendarRange size={14} style={{display:'inline', marginRight: '4px'}}/>End Date & Time</label>
+                <input 
+                  type="datetime-local" 
+                  className="glass-input" 
+                  value={endDate} 
+                  onChange={(e) => setEndDate(e.target.value)} 
+                />
+              </div>
+            </div>
+
+            {/* Location Dropdowns */}
+            <div className="controls-grid" style={{ paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
+              <div className="input-group">
+                <label className="input-label"><MapPin size={14} style={{display:'inline', marginRight: '4px'}}/>Country</label>
+                <select className="glass-input" value={selectedCountry} onChange={handleCountryChange}>
+                  <option value="">Select Country</option>
+                  {countries.map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label"><MapPin size={14} style={{display:'inline', marginRight: '4px'}}/>State / Province</label>
+                <select className="glass-input" value={selectedState} onChange={handleStateChange} disabled={!selectedCountry || states.length === 0}>
+                  <option value="">Select State</option>
+                  {states.map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label"><MapPin size={14} style={{display:'inline', marginRight: '4px'}}/>City / Region</label>
+                <select className="glass-input" value={selectedCity} onChange={handleCityChange} disabled={!selectedState || cities.length === 0}>
+                  <option value="">Select City</option>
+                  {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Manual Coordinates Override */}
+            <div className="controls-grid" style={{ paddingTop: '0.5rem' }}>
+              <div className="input-group">
+                <label className="input-label"><Globe size={14} style={{display:'inline', marginRight: '4px'}}/>Latitude Override</label>
+                <input 
+                  type="number" 
+                  step="any"
+                  placeholder="e.g. 40.7128"
+                  className="glass-input" 
+                  value={latitude} 
+                  onChange={(e) => setLatitude(e.target.value)} 
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label"><Globe size={14} style={{display:'inline', marginRight: '4px'}}/>Longitude Override</label>
+                <input 
+                  type="number" 
+                  step="any"
+                  placeholder="e.g. -74.0060"
+                  className="glass-input" 
+                  value={longitude} 
+                  onChange={(e) => setLongitude(e.target.value)} 
+                />
+              </div>
+            </div>
+
+            <div className="action-bar">
+              <button className="btn btn-secondary" onClick={setLocationByBrowser}>
+                Use Current Location
+              </button>
+              <button className="btn btn-primary" onClick={handleCalculate} disabled={isCalculating}>
+                <Calculator size={18} />
+                {isCalculating ? 'Calculating...' : 'Calculate Positions'}
+              </button>
+            </div>
           </div>
-        </div>
+
+          {results.length > 0 ? (
+            <div className="glass-panel results-panel animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <div className="results-header">
+                <h2>Calculated Data ({results.length} rows)</h2>
+                <button className="btn btn-primary" onClick={handleExport}>
+                  <Download size={18} />
+                  Export to Excel
+                </button>
+              </div>
+              
+              <div className="table-container" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th style={{ position: 'sticky', top: 0 }}>Date & Time</th>
+                      <th style={{ position: 'sticky', top: 0 }}>Planets</th>
+                      <th style={{ position: 'sticky', top: 0 }}>Sign</th>
+                      <th style={{ position: 'sticky', top: 0 }}>Degree</th>
+                      <th style={{ position: 'sticky', top: 0 }}>Naks</th>
+                      <th style={{ position: 'sticky', top: 0 }}>Lat</th>
+                      <th style={{ position: 'sticky', top: 0 }}>Lon</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.slice(0, 100).map((row, i) => (
+                      <tr key={i}>
+                        <td style={{whiteSpace: 'nowrap'}}>{row.Date}</td>
+                        <td style={{fontWeight: 600}}>{row.Planets}</td>
+                        <td>{row.Sign}</td>
+                        <td>{row.Degree}</td>
+                        <td>{row.Naks}</td>
+                        <td>{row.Latitude}</td>
+                        <td>{row.Longitude}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {results.length > 100 && (
+                  <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    Showing first 100 rows. Export to Excel to see all data.
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="glass-panel empty-state animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <Globe size={48} />
+              <p>Select your location and a specific date/time to see precise planetary sign, degree, and Nakshatra placements.</p>
+            </div>
+          )}
+        </>
       ) : (
-        <div className="glass-panel empty-state animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <Globe size={48} />
-          <p>Select your location and a specific date/time to see precise planetary sign, degree, and Nakshatra placements.</p>
-        </div>
+        <Commodities />
       )}
     </div>
   );
